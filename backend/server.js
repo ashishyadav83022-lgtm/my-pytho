@@ -1,7 +1,7 @@
 require("dotenv").config();
 const app = require("./src/app");
 const { testConnection } = require("./src/config/db");
-const { initUsersTable } = require("./src/config/initDb");
+const { initUsersTable, initCourseTables } = require("./src/config/initDb");
 
 const PORT = process.env.PORT || 5000;
 
@@ -9,6 +9,7 @@ const startServer = async () => {
   const connected = await testConnection();
   if (connected) {
     await initUsersTable();
+    await initCourseTables();
   }
 
   app.listen(PORT, () => {
