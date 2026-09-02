@@ -54,4 +54,82 @@ const initCourseTables = async () => {
   }
 };
 
-module.exports = { initUsersTable, initCourseTables };
+const initLearningTables = async () => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS modules (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        order_index INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS lessons (
+        id SERIAL PRIMARY KEY,
+        module_id INTEGER NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL,
+        content TEXT,
+        video_url VARCHAR(500),
+        resource_url VARCHAR(500),
+        order_index INTEGER NOT NULL DEFAULT 0,
+        duration_minutes INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS lesson_progress (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+        completed_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, lesson_id)
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, lesson_id)
+      );
+    `);
+
+    console.log("Learning tables ready");
+  } catch (error) {
+    console.error("Failed to initialize learning tables:", error.message);
+    throw error;
+  }
+};
+
+const initEnrollmentTable = async () => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS enrollments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+        status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active','completed','dropped')),
+        enrolled_at TIMESTAMP DEFAULT NOW(),
+        completed_at TIMESTAMP,
+        UNIQUE(user_id, course_id)
+      );
+    `);
+    console.log("Enrollment table ready");
+  } catch (error) {
+    console.error("Failed to initialize enrollment table:", error.message);
+    throw error;
+  }
+};
+
+module.exports = { initUsersTable, initCourseTables, initLearningTables, initEnrollmentTable };
