@@ -1,13 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const enrollmentController = require('../controllers/enrollment.controller');
-const authMiddleware = require('../middleware/auth.middleware');
+const { enroll, getMyEnrollments, getStatus, unenroll } = require("../controllers/enrollment.controller");
+const { protect } = require("../middleware/auth.middleware");
 
-router.use(authMiddleware);
-
-router.post('/courses/:courseId', enrollmentController.enroll);
-router.get('/my-courses', enrollmentController.getMyEnrollments);
-router.get('/status/:courseId', enrollmentController.getStatus);
-router.delete('/courses/:courseId', enrollmentController.unenroll);
+router.post("/courses/:courseId", protect, enroll);
+router.get("/me", protect, getMyEnrollments);
+router.get("/courses/:courseId/status", protect, getStatus);
+router.delete("/courses/:courseId", protect, unenroll);
 
 module.exports = router;

@@ -6,6 +6,8 @@ const {
   initCourseTables,
   initLearningTables,
   initEnrollmentTable,
+  initQuizTables,
+  initEventTables,
 } = require("./src/config/initDb");
 
 const PORT = process.env.PORT || 5000;
@@ -17,6 +19,8 @@ const startServer = async () => {
     await initCourseTables();
     await initLearningTables();
     await initEnrollmentTable();
+    await initQuizTables();
+    await initEventTables();
   }
 
   app.listen(PORT, () => {

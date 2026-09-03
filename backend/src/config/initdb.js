@@ -132,4 +132,98 @@ const initEnrollmentTable = async () => {
   }
 };
 
-module.exports = { initUsersTable, initCourseTables, initLearningTables, initEnrollmentTable };
+const initQuizTables = async () => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS quizzes (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        passing_score INTEGER NOT NULL DEFAULT 50 CHECK (passing_score BETWEEN 0 AND 100),
+        time_limit_minutes INTEGER DEFAULT 0,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS questions (
+        id SERIAL PRIMARY KEY,
+        quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+        question_text TEXT NOT NULL,
+        options JSONB NOT NULL,
+        correct_option_index INTEGER NOT NULL,
+        order_index INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS quiz_attempts (
+        id SERIAL PRIMARY KEY,
+        quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        score INTEGER NOT NULL,
+        total_questions INTEGER NOT NULL,
+        correct_answers INTEGER NOT NULL,
+        passed BOOLEAN NOT NULL,
+        answers JSONB NOT NULL,
+        attempted_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    console.log("Quiz tables ready");
+  } catch (error) {
+    console.error("Failed to initialize quiz tables:", error.message);
+    throw error;
+  }
+};
+
+const initEventTables = async () => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS events (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER REFERENCES courses(id) ON DELETE SET NULL,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        event_type VARCHAR(30) NOT NULL DEFAULT 'workshop' CHECK (event_type IN ('workshop','webinar','exam','meeting','other')),
+        event_date TIMESTAMP NOT NULL,
+        duration_minutes INTEGER DEFAULT 60,
+        location VARCHAR(500),
+        max_participants INTEGER,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming','ongoing','completed','cancelled')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS event_registrations (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(20) NOT NULL DEFAULT 'registered' CHECK (status IN ('registered','cancelled')),
+        registered_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(event_id, user_id)
+      );
+    `);
+
+    console.log("Event tables ready");
+  } catch (error) {
+    console.error("Failed to initialize event tables:", error.message);
+    throw error;
+  }
+};
+
+module.exports = {
+  initUsersTable,
+  initCourseTables,
+  initLearningTables,
+  initEnrollmentTable,
+  initQuizTables,
+  initEventTables,
+};

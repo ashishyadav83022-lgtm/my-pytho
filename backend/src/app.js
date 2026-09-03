@@ -9,6 +9,8 @@ const authRoutes = require("./routes/auth.routes");
 const courseRoutes = require("./routes/course.routes");
 const learningRoutes = require("./routes/learning.routes");
 const enrollmentRoutes = require("./routes/enrollment.routes");
+const quizRoutes = require("./routes/quiz.routes");
+const eventRoutes = require("./routes/event.routes");
 const { notFound, errorHandler } = require("./middleware/errorHandler.middleware");
 
 const app = express();
@@ -49,6 +51,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/learning", learningRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/quiz", quizRoutes);
+app.use("/api/events", eventRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
