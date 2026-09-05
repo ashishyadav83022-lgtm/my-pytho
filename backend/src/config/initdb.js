@@ -219,6 +219,47 @@ const initEventTables = async () => {
   }
 };
 
+const initAnnouncementTable = async () => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS announcements (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(200) NOT NULL,
+        content TEXT NOT NULL,
+        target_role VARCHAR(20) NOT NULL DEFAULT 'all' CHECK (target_role IN ('all','trainee','trainer','admin')),
+        course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+        priority VARCHAR(20) NOT NULL DEFAULT 'normal' CHECK (priority IN ('low','normal','high')),
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log("Announcement table ready");
+  } catch (error) {
+    console.error("Failed to initialize announcement table:", error.message);
+    throw error;
+  }
+};
+
+const initCertificateTable = async () => {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS certificates (
+        id SERIAL PRIMARY KEY,
+        certificate_id VARCHAR(30) UNIQUE NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+        issued_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, course_id)
+      );
+    `);
+    console.log("Certificate table ready");
+  } catch (error) {
+    console.error("Failed to initialize certificate table:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   initUsersTable,
   initCourseTables,
@@ -226,4 +267,6 @@ module.exports = {
   initEnrollmentTable,
   initQuizTables,
   initEventTables,
+  initAnnouncementTable,
+  initCertificateTable,
 };
